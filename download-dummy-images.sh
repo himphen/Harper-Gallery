@@ -3,13 +3,21 @@ set -euo pipefail
 
 mkdir -p artworks
 
-curl -L "https://picsum.photos/seed/gallery-art-1/1200/900" -o artworks/art1.jpg
-curl -L "https://picsum.photos/seed/gallery-art-2/1200/900" -o artworks/art2.jpg
-curl -L "https://picsum.photos/seed/gallery-art-3/1200/900" -o artworks/art3.jpg
-curl -L "https://picsum.photos/seed/gallery-art-4/1200/900" -o artworks/art4.jpg
-curl -L "https://picsum.photos/seed/gallery-art-5/1200/900" -o artworks/art5.jpg
-curl -L "https://picsum.photos/seed/gallery-art-6/1200/900" -o artworks/art6.jpg
-curl -L "https://picsum.photos/seed/gallery-art-7/1200/900" -o artworks/art7.jpg
-curl -L "https://picsum.photos/seed/gallery-art-8/1200/900" -o artworks/art8.jpg
+download_image() {
+  local seed="$1"
+  local output="$2"
+  curl --fail --show-error --silent --location \
+    "https://picsum.photos/seed/${seed}/1200/900" \
+    --output "${output}"
+}
+
+download_image "gallery-art-1" "artworks/art1.jpg"
+download_image "gallery-art-2" "artworks/art2.jpg"
+download_image "gallery-art-3" "artworks/art3.jpg"
+download_image "gallery-art-4" "artworks/art4.jpg"
+download_image "gallery-art-5" "artworks/art5.jpg"
+download_image "gallery-art-6" "artworks/art6.jpg"
+download_image "gallery-art-7" "artworks/art7.jpg"
+download_image "gallery-art-8" "artworks/art8.jpg"
 
 echo "Downloaded 8 dummy images into artworks/."

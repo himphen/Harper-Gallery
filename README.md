@@ -1,10 +1,13 @@
 # 3D Art Gallery
 
-A static, browser-based 3D art gallery built with plain HTML, CSS, JavaScript, and Three.js CDN modules.
+An elegant static 3D virtual gallery built with plain HTML, CSS, JavaScript, and Three.js ES module CDN imports.
 
-This repository is set up as a lightweight foundation that runs locally on macOS and can be deployed to GitHub Pages.
+This project is designed for:
+- local development on macOS
+- static deployment on GitHub Pages
+- easy replacement of placeholder images with real family artworks
 
-## Current Project Structure
+## File Structure
 
 ```text
 gallery/
@@ -15,56 +18,76 @@ gallery/
 ├── index.html
 ├── main.js
 ├── style.css
-├── artworks/
-└── context/
+└── artworks/
+    ├── art1.jpg
+    ├── art2.jpg
+    ├── art3.jpg
+    ├── art4.jpg
+    ├── art5.jpg
+    ├── art6.jpg
+    ├── art7.jpg
+    └── art8.jpg
 ```
 
-## Quick Start (macOS)
+## Download Dummy Images
 
-1. Download placeholder images:
+The script downloads eight seeded placeholder JPG files into `artworks/`.
 
-   ```bash
-   chmod +x download-dummy-images.sh
-   ./download-dummy-images.sh
-   ```
+```bash
+chmod +x download-dummy-images.sh
+./download-dummy-images.sh
+```
 
-2. Start a local static server:
+## Run Locally on macOS
+
+1. Start a static server:
 
    ```bash
    python3 -m http.server 8000
    ```
 
-3. Open:
+2. Open:
 
    ```text
    http://localhost:8000
    ```
 
-## Replace With Real Artwork
+## Replace Dummy Images With Real Artwork
 
-- Keep the same filenames in `artworks/` (for example, `art1.jpg` ... `art8.jpg`), or
-- Update each `file` path in the `artworks` array in `main.js`.
+Use either approach:
 
-## Edit Artwork Metadata
+1. Replace files in `artworks/` while keeping names `art1.jpg` to `art8.jpg`.
+2. Keep your filenames and update `file` paths in the `artworks` array in `main.js`.
 
-In `main.js`, update the `artworks` array fields:
+All paths must stay relative (for example: `artworks/my-drawing-01.jpg`).
 
-- `title`
-- `year`
-- `description`
-- `file`
+## Edit Artwork Titles and Descriptions
 
-## GitHub Pages Deployment
+In `main.js`, edit the `artworks` array:
 
-1. Create a GitHub repository and push this folder.
-2. Open repository **Settings**.
-3. Go to **Pages**.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Select `main` branch and `/ (root)` folder.
-6. Save, then open the generated GitHub Pages URL.
+```js
+{
+  file: "artworks/art1.jpg",
+  title: "Your Title",
+  year: "2026",
+  description: "Your description."
+}
+```
 
-## Notes
+## Deploy to GitHub Pages
 
-- This project is static-only: no backend, no database, no environment variables.
-- `context/` is intentionally excluded from git via `.gitignore`.
-- Agent guidance for Cursor/AI workflows is in `AGENTS.md`.
+1. Create a GitHub repository.
+2. Push this project to the repository.
+3. Go to repository **Settings**.
+4. Open **Pages**.
+5. Set source to **Deploy from a branch**.
+6. Select branch **main** and folder **/ (root)**.
+7. Click **Save**.
+8. Open the generated GitHub Pages URL.
+
+## Important Notes
+
+- GitHub Pages is static hosting, so artwork metadata is manually maintained in `main.js`.
+- Do not use absolute local file paths like `file:///Users/...`.
+- `context/` is excluded by `.gitignore`.
+- Agent instructions for Cursor or other AI coding assistants live in `AGENTS.md`.
