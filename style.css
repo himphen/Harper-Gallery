@@ -52,6 +52,28 @@ canvas {
   z-index: 10;
 }
 
+#fullscreen-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-bg);
+  box-shadow: 0 8px 24px var(--shadow);
+  color: var(--text);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  z-index: 30;
+}
+
+#fullscreen-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 #overlay {
   position: absolute;
   top: 20px;
@@ -118,4 +140,52 @@ canvas {
 #overlay-year {
   color: #f4d9a7;
   font-weight: 600;
+}
+
+#joystick {
+  display: none;
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 132px;
+  height: 132px;
+  z-index: 40;
+}
+
+#joystick-base {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel-bg);
+  box-shadow: 0 8px 24px var(--shadow);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  backdrop-filter: blur(8px);
+}
+
+#joystick-stick {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translate(-50%, -50%);
+  transition: transform 80ms ease-out;
+  pointer-events: none;
+}
+
+@media (pointer: coarse) {
+  #joystick {
+    display: block;
+  }
+
+  #hud {
+    max-width: calc(100vw - 170px);
+    font-size: 11px;
+  }
 }

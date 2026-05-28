@@ -1,68 +1,24 @@
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
-
-const artworks = [
-  {
-    file: "artworks/art1.jpg",
-    title: "Evening Bloom",
-    year: "2026",
-    description: "A warm composition with soft movement and layered textures."
-  },
-  {
-    file: "artworks/art2.jpg",
-    title: "City Whisper",
-    year: "2026",
-    description: "A quiet urban moment rendered with playful contrast."
-  },
-  {
-    file: "artworks/art3.jpg",
-    title: "Golden Window",
-    year: "2026",
-    description: "Sunlit geometry and gentle shadows shape this scene."
-  },
-  {
-    file: "artworks/art4.jpg",
-    title: "Small Stories",
-    year: "2026",
-    description: "Narrative fragments gathered from daily family life."
-  },
-  {
-    file: "artworks/art5.jpg",
-    title: "Floating Garden",
-    year: "2026",
-    description: "A dreamy landscape balancing calm colors and open space."
-  },
-  {
-    file: "artworks/art6.jpg",
-    title: "Blue Echo",
-    year: "2026",
-    description: "Cool tones and rhythmic strokes create a meditative mood."
-  },
-  {
-    file: "artworks/art7.jpg",
-    title: "Paper Sky",
-    year: "2026",
-    description: "A light-hearted abstraction inspired by folded forms."
-  },
-  {
-    file: "artworks/art8.jpg",
-    title: "Little Horizon",
-    year: "2026",
-    description: "A calm closing piece with distant depth and soft light."
-  }
-];
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { artworks } from "./artworks.js";
 
 const app = document.getElementById("app");
+const hud = document.getElementById("hud");
 const overlay = document.getElementById("overlay");
 const overlayImage = document.getElementById("overlay-image");
 const overlayTitle = document.getElementById("overlay-title");
 const overlayYear = document.getElementById("overlay-year");
 const overlayDescription = document.getElementById("overlay-description");
 const overlayCloseButton = document.getElementById("overlay-close");
+const fullscreenToggleButton = document.getElementById("fullscreen-toggle");
+const joystick = document.getElementById("joystick");
+const joystickBase = document.getElementById("joystick-base");
+const joystickStick = document.getElementById("joystick-stick");
+const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x141311);
-scene.fog = new THREE.Fog(0x141311, 12, 30);
+scene.fog = new THREE.Fog(0x141311, 16, 42);
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 2, 8.5);
@@ -76,20 +32,29 @@ renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 app.appendChild(renderer.domElement);
+renderer.domElement.style.touchAction = "none";
+
+if (hud) {
+  hud.textContent = isCoarsePointer
+    ? "Touch Drag: Look Around | Pinch: Zoom | Joystick: Move | Tap Artwork: Details"
+    : "WASD or Arrow Keys: Move | Mouse Drag: Look Around | Click Artwork: Details";
+}
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.minDistance = 3.5;
-controls.maxDistance = 15;
-controls.maxPolarAngle = Math.PI / 2 - 0.03;
-controls.target.set(0, 1.85, 0);
+controls.enablePan = false;
+controls.rotateSpeed = 0.8;
+controls.minDistance = 1.2;
+controls.maxDistance = 8.5;
+controls.maxPolarAngle = Math.PI / 2 - 0.05;
+controls.target.set(0, 1.6, 2.8);
 
 scene.add(new THREE.AmbientLight(0xfff2df, 0.42));
 scene.add(new THREE.HemisphereLight(0xfff7ea, 0x463831, 0.28));
 
-const roomWidth = 14;
-const roomDepth = 10;
-const roomHeight = 4.2;
+const roomWidth = 20;
+const roomDepth = 14;
+const roomHeight = 5.2;
 
 const room = new THREE.Group();
 scene.add(room);
@@ -103,27 +68,27 @@ function createWoodTexture() {
     return null;
   }
 
-  context.fillStyle = "#6f533f";
+  context.fillStyle = "#cfab84";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   for (let i = 0; i < 85; i += 1) {
     const y = (i / 85) * canvas.height;
     const alpha = 0.08 + (i % 3) * 0.04;
-    context.fillStyle = `rgba(43, 31, 24, ${alpha})`;
+    context.fillStyle = `rgba(133, 101, 73, ${alpha})`;
     context.fillRect(0, y, canvas.width, 5);
   }
 
   for (let i = 0; i < 170; i += 1) {
     const x = Math.random() * canvas.width;
     const y = Math.random() * canvas.height;
-    context.fillStyle = `rgba(133, 97, 73, ${0.08 + Math.random() * 0.15})`;
+    context.fillStyle = `rgba(236, 205, 168, ${0.08 + Math.random() * 0.15})`;
     context.fillRect(x, y, 22 + Math.random() * 28, 2 + Math.random() * 3);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(6, 4);
+  texture.repeat.set(8, 6);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 }
@@ -131,9 +96,9 @@ function createWoodTexture() {
 const floor = new THREE.Mesh(
   new THREE.PlaneGeometry(roomWidth, roomDepth),
   new THREE.MeshStandardMaterial({
-    color: 0x6a4f3a,
+    color: 0xdabd98,
     map: createWoodTexture(),
-    roughness: 0.8,
+    roughness: 0.78,
     metalness: 0.05
   })
 );
@@ -141,7 +106,7 @@ floor.rotation.x = -Math.PI / 2;
 floor.receiveShadow = true;
 room.add(floor);
 
-const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xebe5db, roughness: 0.9 });
+const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xebe5db, roughness: 0.9, side: THREE.DoubleSide });
 const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0xe4ded3, roughness: 1 });
 const baseboardMaterial = new THREE.MeshStandardMaterial({ color: 0x222225, roughness: 0.45, metalness: 0.2 });
 
@@ -158,6 +123,24 @@ const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(roomDepth, roomHeight),
 rightWall.rotation.y = -Math.PI / 2;
 rightWall.position.set(roomWidth / 2, roomHeight / 2, 0);
 room.add(rightWall);
+
+// Front wall with a central entrance for a more realistic gallery layout.
+const frontEntranceWidth = 3.8;
+const frontEntranceHeight = 2.7;
+const frontSideWidth = (roomWidth - frontEntranceWidth) / 2;
+const frontTopHeight = roomHeight - frontEntranceHeight;
+
+const frontLeftWall = new THREE.Mesh(new THREE.PlaneGeometry(frontSideWidth, roomHeight), wallMaterial);
+frontLeftWall.position.set(-(frontEntranceWidth / 2 + frontSideWidth / 2), roomHeight / 2, roomDepth / 2);
+room.add(frontLeftWall);
+
+const frontRightWall = new THREE.Mesh(new THREE.PlaneGeometry(frontSideWidth, roomHeight), wallMaterial);
+frontRightWall.position.set(frontEntranceWidth / 2 + frontSideWidth / 2, roomHeight / 2, roomDepth / 2);
+room.add(frontRightWall);
+
+const frontTopWall = new THREE.Mesh(new THREE.PlaneGeometry(frontEntranceWidth, frontTopHeight), wallMaterial);
+frontTopWall.position.set(0, frontEntranceHeight + frontTopHeight / 2, roomDepth / 2);
+room.add(frontTopWall);
 
 const ceiling = new THREE.Mesh(
   new THREE.PlaneGeometry(roomWidth, roomDepth),
@@ -177,60 +160,8 @@ function createBaseboard(width, depth, x, y, z, rotationY = 0) {
 createBaseboard(roomWidth, 0.08, 0, 0.07, -roomDepth / 2 + 0.03);
 createBaseboard(roomDepth, 0.08, -roomWidth / 2 + 0.03, 0.07, 0, Math.PI / 2);
 createBaseboard(roomDepth, 0.08, roomWidth / 2 - 0.03, 0.07, 0, Math.PI / 2);
-
-function createCityTexture() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1024;
-  canvas.height = 512;
-  const context = canvas.getContext("2d");
-  if (!context) {
-    return null;
-  }
-
-  const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, "#081228");
-  gradient.addColorStop(1, "#22314e");
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < 220; i += 1) {
-    context.fillStyle = `rgba(255, 230, 175, ${0.25 + Math.random() * 0.7})`;
-    const x = Math.random() * canvas.width;
-    const y = 80 + Math.random() * (canvas.height - 120);
-    context.fillRect(x, y, 2, 2);
-  }
-
-  for (let i = 0; i < 24; i += 1) {
-    const buildingWidth = 18 + Math.random() * 42;
-    const height = 60 + Math.random() * 170;
-    const x = i * 45 + Math.random() * 20;
-    const y = canvas.height - height;
-    context.fillStyle = `rgba(17, 26, 42, ${0.65 + Math.random() * 0.3})`;
-    context.fillRect(x, y, buildingWidth, height);
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}
-
-const windowGroup = new THREE.Group();
-windowGroup.position.set(0, 2.25, -roomDepth / 2 + 0.01);
-room.add(windowGroup);
-
-const windowView = new THREE.Mesh(
-  new THREE.PlaneGeometry(2.4, 1.25),
-  new THREE.MeshBasicMaterial({ map: createCityTexture(), toneMapped: false })
-);
-windowView.position.z = -0.02;
-windowGroup.add(windowView);
-
-const windowFrame = new THREE.Mesh(
-  new THREE.BoxGeometry(2.58, 1.42, 0.06),
-  new THREE.MeshStandardMaterial({ color: 0x19191a, roughness: 0.45, metalness: 0.4 })
-);
-windowFrame.position.z = 0.03;
-windowGroup.add(windowFrame);
+createBaseboard(frontSideWidth, 0.08, -(frontEntranceWidth / 2 + frontSideWidth / 2), 0.07, roomDepth / 2 - 0.03);
+createBaseboard(frontSideWidth, 0.08, frontEntranceWidth / 2 + frontSideWidth / 2, 0.07, roomDepth / 2 - 0.03);
 
 function addSpotlight(position, targetPosition, intensity = 1.1) {
   const light = new THREE.SpotLight(0xffefda, intensity, 16, Math.PI / 5.8, 0.35, 1.15);
@@ -257,11 +188,31 @@ function addSpotlight(position, targetPosition, intensity = 1.1) {
   room.add(fixture);
 }
 
-addSpotlight(new THREE.Vector3(-4.4, roomHeight - 0.25, -2.8), new THREE.Vector3(-5.95, 1.9, -2.6), 1.1);
-addSpotlight(new THREE.Vector3(-4.4, roomHeight - 0.25, 2.6), new THREE.Vector3(-5.95, 1.9, 2.5), 1.1);
-addSpotlight(new THREE.Vector3(4.4, roomHeight - 0.25, -2.8), new THREE.Vector3(5.95, 1.9, -2.6), 1.1);
-addSpotlight(new THREE.Vector3(4.4, roomHeight - 0.25, 2.6), new THREE.Vector3(5.95, 1.9, 2.5), 1.1);
-addSpotlight(new THREE.Vector3(0, roomHeight - 0.25, -3.4), new THREE.Vector3(0, 2, -roomDepth / 2 + 0.2), 1.2);
+addSpotlight(
+  new THREE.Vector3(-roomWidth * 0.32, roomHeight - 0.25, -roomDepth * 0.3),
+  new THREE.Vector3(-roomWidth / 2 + 1.2, 2.1, -roomDepth * 0.3),
+  1.1
+);
+addSpotlight(
+  new THREE.Vector3(-roomWidth * 0.32, roomHeight - 0.25, roomDepth * 0.3),
+  new THREE.Vector3(-roomWidth / 2 + 1.2, 2.1, roomDepth * 0.3),
+  1.1
+);
+addSpotlight(
+  new THREE.Vector3(roomWidth * 0.32, roomHeight - 0.25, -roomDepth * 0.3),
+  new THREE.Vector3(roomWidth / 2 - 1.2, 2.1, -roomDepth * 0.3),
+  1.1
+);
+addSpotlight(
+  new THREE.Vector3(roomWidth * 0.32, roomHeight - 0.25, roomDepth * 0.3),
+  new THREE.Vector3(roomWidth / 2 - 1.2, 2.1, roomDepth * 0.3),
+  1.1
+);
+addSpotlight(
+  new THREE.Vector3(0, roomHeight - 0.25, -roomDepth * 0.34),
+  new THREE.Vector3(0, 2.15, -roomDepth / 2 + 0.2),
+  1.2
+);
 
 const textureLoader = new THREE.TextureLoader();
 const clickableArtworks = [];
@@ -305,14 +256,14 @@ function createLabelTexture(artwork) {
     return null;
   }
 
-  context.fillStyle = "#c19a5a";
+  context.fillStyle = "#f5f2eb";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  context.fillStyle = "rgba(44, 32, 20, 0.2)";
+  context.fillStyle = "rgba(95, 84, 69, 0.18)";
   context.fillRect(0, 0, canvas.width, 12);
   context.fillRect(0, canvas.height - 10, canvas.width, 10);
 
-  context.fillStyle = "#2f2112";
+  context.fillStyle = "#4c443a";
   context.font = "600 32px serif";
   context.textAlign = "left";
   context.fillText(artwork.title, 24, 52);
@@ -372,20 +323,34 @@ function createArtworkPanel(artwork) {
 
   const matBoard = new THREE.Mesh(
     new THREE.PlaneGeometry(matWidth, matHeight),
-    new THREE.MeshStandardMaterial({ color: 0xf9f8f3, roughness: 0.95 })
+    new THREE.MeshStandardMaterial({
+      color: 0xf9f8f3,
+      roughness: 0.95,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
+      polygonOffsetUnits: 1
+    })
   );
   matBoard.position.z = 0.02;
+  matBoard.castShadow = false;
+  matBoard.receiveShadow = false;
+  matBoard.renderOrder = 1;
   group.add(matBoard);
 
   const artMaterial = new THREE.MeshStandardMaterial({
     color: 0xffffff,
     roughness: 0.67,
-    metalness: 0.03
+    metalness: 0.03,
+    polygonOffset: true,
+    polygonOffsetFactor: -1,
+    polygonOffsetUnits: -1
   });
   const painting = new THREE.Mesh(new THREE.PlaneGeometry(artWidth, artHeight), artMaterial);
   painting.position.z = 0.03;
   painting.userData = { artwork };
-  painting.castShadow = true;
+  painting.castShadow = false;
+  painting.receiveShadow = false;
+  painting.renderOrder = 2;
   clickableArtworks.push(painting);
   group.add(painting);
 
@@ -397,13 +362,19 @@ function createArtworkPanel(artwork) {
   const label = new THREE.Mesh(
     new THREE.PlaneGeometry(0.78, 0.2),
     new THREE.MeshStandardMaterial({
-      color: 0xc89f63,
+      color: 0xf7f4ee,
       map: createLabelTexture(artwork),
-      roughness: 0.35,
-      metalness: 0.32
+      roughness: 0.68,
+      metalness: 0.04,
+      polygonOffset: true,
+      polygonOffsetFactor: -2,
+      polygonOffsetUnits: -2
     })
   );
   label.position.set(0.02, -frameOuterHeight / 2 - 0.22, 0.03);
+  label.castShadow = false;
+  label.receiveShadow = false;
+  label.renderOrder = 4;
   group.add(label);
 
   textureLoader.load(
@@ -428,14 +399,14 @@ function createArtworkPanel(artwork) {
 
 function addArtworksToRoom() {
   const placement = [
-    { wall: "left", offset: -2.8 },
-    { wall: "left", offset: 0 },
-    { wall: "left", offset: 2.8 },
-    { wall: "back", offset: -4.2 },
-    { wall: "back", offset: 0 },
-    { wall: "back", offset: 4.2 },
-    { wall: "right", offset: -1.8 },
-    { wall: "right", offset: 1.8 }
+    { wall: "left", offset: -4.6 },
+    { wall: "left", offset: -1.4 },
+    { wall: "left", offset: 1.8 },
+    { wall: "back", offset: -6.2 },
+    { wall: "back", offset: -2.0 },
+    { wall: "back", offset: 2.2 },
+    { wall: "right", offset: -3.2 },
+    { wall: "right", offset: 3.2 }
   ];
 
   for (let i = 0; i < artworks.length; i += 1) {
@@ -463,18 +434,18 @@ addArtworksToRoom();
 
 const bench = new THREE.Mesh(
   new THREE.BoxGeometry(2.8, 0.26, 0.92),
-  new THREE.MeshStandardMaterial({ color: 0x2a2a2d, roughness: 0.8, metalness: 0.1 })
+  new THREE.MeshStandardMaterial({ color: 0xf2eee6, roughness: 0.85, metalness: 0.02 })
 );
-bench.position.set(0, 0.44, 1.25);
+bench.position.set(0, 0.44, 2.0);
 bench.castShadow = true;
 bench.receiveShadow = true;
 room.add(bench);
 
-const benchLegMaterial = new THREE.MeshStandardMaterial({ color: 0x1b1b1d, roughness: 0.4, metalness: 0.3 });
+const benchLegMaterial = new THREE.MeshStandardMaterial({ color: 0xe8e2d7, roughness: 0.86, metalness: 0.02 });
 for (const x of [-1.1, 1.1]) {
   for (const z of [-0.32, 0.32]) {
     const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.34, 0.08), benchLegMaterial);
-    leg.position.set(x, 0.19, 1.25 + z);
+    leg.position.set(x, 0.19, 2.0 + z);
     leg.castShadow = true;
     room.add(leg);
   }
@@ -496,6 +467,166 @@ const sculpture = new THREE.Mesh(
 sculpture.position.set(0, 0.95, -0.9);
 sculpture.castShadow = true;
 room.add(sculpture);
+
+function createGirlCharacter() {
+  const root = new THREE.Group();
+
+  const skinMaterial = new THREE.MeshStandardMaterial({ color: 0xf8d8c0, roughness: 0.62 });
+  const hairMaterial = new THREE.MeshStandardMaterial({ color: 0x2f241f, roughness: 0.55 });
+  const dressMaterial = new THREE.MeshStandardMaterial({ color: 0xe59db8, roughness: 0.7 });
+  const collarMaterial = new THREE.MeshStandardMaterial({ color: 0xf1bfd1, roughness: 0.72 });
+  const fabricMaterial = new THREE.MeshStandardMaterial({ color: 0xf0e6dd, roughness: 0.9 });
+  const shoeMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2e, roughness: 0.4, metalness: 0.1 });
+
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.33, 0.68, 30), dressMaterial);
+  torso.position.y = 1.08;
+  root.add(torso);
+
+  const upperBody = new THREE.Mesh(
+    new THREE.SphereGeometry(0.24, 26, 18, 0, Math.PI * 2, 0, Math.PI * 0.58),
+    dressMaterial
+  );
+  upperBody.position.set(0, 1.28, 0);
+  upperBody.scale.set(1.02, 0.8, 0.86);
+  root.add(upperBody);
+
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.02, 24, 64), collarMaterial);
+  collar.position.set(0, 1.35, 0);
+  collar.rotation.x = Math.PI / 2;
+  root.add(collar);
+
+  const headRig = new THREE.Group();
+  headRig.position.set(0, 1.66, 0);
+  root.add(headRig);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 20), skinMaterial);
+  headRig.add(head);
+
+  const hairCap = new THREE.Mesh(
+    new THREE.SphereGeometry(0.206, 24, 20, 0, Math.PI * 2, 0, Math.PI * 0.68),
+    hairMaterial
+  );
+  headRig.add(hairCap);
+
+  const ponytail = new THREE.Mesh(new THREE.SphereGeometry(0.11, 18, 14), hairMaterial);
+  ponytail.position.set(0, -0.04, -0.19);
+  headRig.add(ponytail);
+
+  const leftArmPivot = new THREE.Group();
+  leftArmPivot.position.set(-0.245, 1.26, 0);
+  const leftArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.28, 6, 10), skinMaterial);
+  leftArm.position.y = -0.19;
+  leftArmPivot.add(leftArm);
+  root.add(leftArmPivot);
+
+  const rightArmPivot = new THREE.Group();
+  rightArmPivot.position.set(0.245, 1.26, 0);
+  const rightArm = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.28, 6, 10), skinMaterial);
+  rightArm.position.y = -0.19;
+  rightArmPivot.add(rightArm);
+  root.add(rightArmPivot);
+
+  const leftShoulder = new THREE.Mesh(new THREE.SphereGeometry(0.09, 22, 16), dressMaterial);
+  leftShoulder.position.set(-0.21, 1.28, 0);
+  leftShoulder.scale.set(1.0, 0.82, 0.85);
+  root.add(leftShoulder);
+
+  const rightShoulder = new THREE.Mesh(new THREE.SphereGeometry(0.09, 22, 16), dressMaterial);
+  rightShoulder.position.set(0.21, 1.28, 0);
+  rightShoulder.scale.set(1.0, 0.82, 0.85);
+  root.add(rightShoulder);
+
+  const leftLegPivot = new THREE.Group();
+  leftLegPivot.position.set(-0.11, 0.58, 0);
+  const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.46, 0.14), fabricMaterial);
+  leftLeg.position.y = -0.24;
+  leftLegPivot.add(leftLeg);
+  const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.24), shoeMaterial);
+  leftShoe.position.set(0, -0.5, 0.04);
+  leftLegPivot.add(leftShoe);
+  root.add(leftLegPivot);
+
+  const rightLegPivot = new THREE.Group();
+  rightLegPivot.position.set(0.11, 0.58, 0);
+  const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.46, 0.14), fabricMaterial);
+  rightLeg.position.y = -0.24;
+  rightLegPivot.add(rightLeg);
+  const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.09, 0.24), shoeMaterial);
+  rightShoe.position.set(0, -0.5, 0.04);
+  rightLegPivot.add(rightShoe);
+  root.add(rightLegPivot);
+
+  root.traverse((child) => {
+    if (child instanceof THREE.Mesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+
+  return {
+    root,
+    torso,
+    collar,
+    headRig,
+    leftArmPivot,
+    rightArmPivot,
+    leftLegPivot,
+    rightLegPivot
+  };
+}
+
+const girl = createGirlCharacter();
+girl.root.position.set(0, 0, 3.25);
+room.add(girl.root);
+
+const moveState = {
+  forward: false,
+  backward: false,
+  left: false,
+  right: false,
+  sprint: false
+};
+
+const joystickInput = {
+  x: 0,
+  y: 0
+};
+
+const movementBounds = {
+  minX: -roomWidth / 2 + 0.75,
+  maxX: roomWidth / 2 - 0.75,
+  minZ: -roomDepth / 2 + 0.75,
+  maxZ: roomDepth / 2 - 0.75
+};
+
+const cameraBounds = {
+  minX: -roomWidth / 2 + 0.18,
+  maxX: roomWidth / 2 - 0.18,
+  minY: 1.02,
+  maxY: roomHeight - 0.12,
+  minZ: -roomDepth / 2 + 0.18,
+  maxZ: roomDepth / 2 - 0.18
+};
+
+const collisionObstacles = [
+  { x: 0, z: 2.0, radius: 1.75 },
+  { x: 0, z: -0.9, radius: 1.05 }
+];
+
+const worldUp = new THREE.Vector3(0, 1, 0);
+const cameraForward = new THREE.Vector3();
+const cameraRight = new THREE.Vector3();
+const movementDirection = new THREE.Vector3();
+const desiredVelocity = new THREE.Vector3();
+const currentVelocity = new THREE.Vector3();
+const candidatePosition = new THREE.Vector3();
+const followTarget = new THREE.Vector3();
+const clock = new THREE.Clock();
+let walkPhase = 0;
+
+controls.target.set(girl.root.position.x, 1.3, girl.root.position.z);
+camera.position.set(girl.root.position.x + 0.3, 2.55, girl.root.position.z + 4.4);
+controls.update();
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -521,13 +652,266 @@ function closeOverlay() {
   overlay.classList.add("hidden");
 }
 
+function applyMovementBounds(position) {
+  position.x = THREE.MathUtils.clamp(position.x, movementBounds.minX, movementBounds.maxX);
+  position.z = THREE.MathUtils.clamp(position.z, movementBounds.minZ, movementBounds.maxZ);
+}
+
+function resolveObstacleCollisions(position) {
+  for (const obstacle of collisionObstacles) {
+    const dx = position.x - obstacle.x;
+    const dz = position.z - obstacle.z;
+    const distanceSquared = dx * dx + dz * dz;
+    const safeDistance = obstacle.radius;
+
+    if (distanceSquared < safeDistance * safeDistance) {
+      const distance = Math.sqrt(distanceSquared) || 0.0001;
+      const push = safeDistance - distance;
+      position.x += (dx / distance) * push;
+      position.z += (dz / distance) * push;
+    }
+  }
+}
+
+function updateWalkPose(targetSwing, blend) {
+  const intensity = Math.min(1, currentVelocity.length() / 2.8);
+  const armSwing = targetSwing * 0.55 * intensity;
+  const legSwing = targetSwing * 0.75 * intensity;
+  const torsoTilt = targetSwing * 0.08 * intensity;
+  const bodyBob = Math.abs(Math.sin(walkPhase)) * 0.05 * intensity;
+  const headBob = Math.sin(walkPhase * 2) * 0.018 * intensity;
+  const headNod = Math.sin(walkPhase) * 0.05 * intensity;
+  const sideSway = Math.sin(walkPhase * 0.5) * 0.025 * intensity;
+
+  girl.leftArmPivot.rotation.x = THREE.MathUtils.lerp(girl.leftArmPivot.rotation.x, armSwing, blend);
+  girl.rightArmPivot.rotation.x = THREE.MathUtils.lerp(girl.rightArmPivot.rotation.x, -armSwing, blend);
+  girl.leftLegPivot.rotation.x = THREE.MathUtils.lerp(girl.leftLegPivot.rotation.x, -legSwing, blend);
+  girl.rightLegPivot.rotation.x = THREE.MathUtils.lerp(girl.rightLegPivot.rotation.x, legSwing, blend);
+  girl.torso.rotation.z = THREE.MathUtils.lerp(girl.torso.rotation.z, torsoTilt, blend);
+  girl.torso.position.y = THREE.MathUtils.lerp(girl.torso.position.y, 1.08, blend);
+  girl.collar.position.y = THREE.MathUtils.lerp(girl.collar.position.y, 1.35 + bodyBob * 0.28, blend);
+  girl.headRig.position.y = THREE.MathUtils.lerp(girl.headRig.position.y, 1.66 + bodyBob * 0.8 + headBob, blend);
+  girl.headRig.rotation.x = THREE.MathUtils.lerp(girl.headRig.rotation.x, headNod, blend);
+  girl.root.position.y = THREE.MathUtils.lerp(girl.root.position.y, bodyBob * 0.62, blend);
+  girl.root.rotation.z = THREE.MathUtils.lerp(girl.root.rotation.z, sideSway, blend);
+}
+
+function normalizeAngle(angle) {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+function updateCharacter(delta) {
+  const keyboardHorizontal = (moveState.right ? 1 : 0) - (moveState.left ? 1 : 0);
+  const keyboardVertical = (moveState.forward ? 1 : 0) - (moveState.backward ? 1 : 0);
+  const horizontal = THREE.MathUtils.clamp(keyboardHorizontal + joystickInput.x, -1, 1);
+  const vertical = THREE.MathUtils.clamp(keyboardVertical + joystickInput.y, -1, 1);
+  const isMoving = Math.abs(horizontal) > 0.001 || Math.abs(vertical) > 0.001;
+  const blend = Math.min(1, delta * 10);
+
+  desiredVelocity.set(0, 0, 0);
+
+  if (isMoving) {
+    camera.getWorldDirection(cameraForward);
+    cameraForward.y = 0;
+    cameraForward.normalize();
+    cameraRight.crossVectors(cameraForward, worldUp).normalize();
+
+    movementDirection
+      .copy(cameraForward)
+      .multiplyScalar(vertical)
+      .addScaledVector(cameraRight, horizontal);
+
+    if (movementDirection.lengthSq() > 0) {
+      movementDirection.normalize();
+    }
+
+    const speed = moveState.sprint ? 3.7 : 2.5;
+    desiredVelocity.copy(movementDirection).multiplyScalar(speed);
+    currentVelocity.lerp(desiredVelocity, Math.min(1, delta * 8));
+    candidatePosition.copy(girl.root.position).addScaledVector(currentVelocity, delta);
+
+    applyMovementBounds(candidatePosition);
+    resolveObstacleCollisions(candidatePosition);
+    girl.root.position.copy(candidatePosition);
+
+    const turnDirection = currentVelocity.lengthSq() > 0.0006 ? currentVelocity : movementDirection;
+    const targetYaw = Math.atan2(turnDirection.x, turnDirection.z);
+    const yawDelta = normalizeAngle(targetYaw - girl.root.rotation.y);
+    const maxTurnSpeed = (moveState.sprint ? 5.2 : 3.6) * delta;
+    const limitedTurn = THREE.MathUtils.clamp(yawDelta, -maxTurnSpeed, maxTurnSpeed);
+    girl.root.rotation.y += limitedTurn;
+
+    const velocityRatio = Math.min(1.4, currentVelocity.length() / 2.5);
+    walkPhase += delta * (6 + 5 * velocityRatio);
+    updateWalkPose(Math.sin(walkPhase), blend);
+  } else {
+    currentVelocity.lerp(desiredVelocity, Math.min(1, delta * 7));
+    candidatePosition.copy(girl.root.position).addScaledVector(currentVelocity, delta);
+    applyMovementBounds(candidatePosition);
+    resolveObstacleCollisions(candidatePosition);
+    girl.root.position.copy(candidatePosition);
+
+    walkPhase = 0;
+    updateWalkPose(0, blend);
+  }
+
+  followTarget.set(girl.root.position.x, 1.25, girl.root.position.z);
+  controls.target.lerp(followTarget, Math.min(1, delta * 8));
+}
+
+function constrainCameraInsideRoom() {
+  camera.position.x = THREE.MathUtils.clamp(camera.position.x, cameraBounds.minX, cameraBounds.maxX);
+  camera.position.y = THREE.MathUtils.clamp(camera.position.y, cameraBounds.minY, cameraBounds.maxY);
+  camera.position.z = THREE.MathUtils.clamp(camera.position.z, cameraBounds.minZ, cameraBounds.maxZ);
+}
+
+function setMoveAction(action, pressed) {
+  if (action === "forward") {
+    moveState.forward = pressed;
+  } else if (action === "backward") {
+    moveState.backward = pressed;
+  } else if (action === "left") {
+    moveState.left = pressed;
+  } else if (action === "right") {
+    moveState.right = pressed;
+  } else if (action === "sprint") {
+    moveState.sprint = pressed;
+  }
+}
+
+function updateKeyState(event, pressed) {
+  let handled = true;
+
+  switch (event.code) {
+    case "KeyW":
+    case "ArrowUp":
+      setMoveAction("forward", pressed);
+      break;
+    case "KeyS":
+    case "ArrowDown":
+      setMoveAction("backward", pressed);
+      break;
+    case "KeyA":
+    case "ArrowLeft":
+      setMoveAction("left", pressed);
+      break;
+    case "KeyD":
+    case "ArrowRight":
+      setMoveAction("right", pressed);
+      break;
+    case "ShiftLeft":
+    case "ShiftRight":
+      setMoveAction("sprint", pressed);
+      break;
+    case "Escape":
+      if (pressed) {
+        closeOverlay();
+      }
+      break;
+    default:
+      handled = false;
+      break;
+  }
+
+  if (handled) {
+    event.preventDefault();
+  }
+}
+
 overlayCloseButton.addEventListener("click", closeOverlay);
 
-window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    closeOverlay();
+function updateFullscreenButtonLabel() {
+  if (!fullscreenToggleButton) {
+    return;
   }
-});
+  fullscreenToggleButton.textContent = document.fullscreenElement ? "Exit Full Screen" : "Full Screen";
+}
+
+async function toggleFullScreen() {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    } else {
+      await document.documentElement.requestFullscreen();
+    }
+  } catch (error) {
+    console.warn("Fullscreen request failed:", error);
+  } finally {
+    updateFullscreenButtonLabel();
+  }
+}
+
+function setupVirtualJoystick() {
+  if (!joystick || !joystickBase || !joystickStick) {
+    return;
+  }
+
+  const radius = 42;
+  let activePointerId = null;
+
+  const resetJoystick = () => {
+    joystickInput.x = 0;
+    joystickInput.y = 0;
+    joystickStick.style.transform = "translate(-50%, -50%)";
+  };
+
+  const updateJoystick = (clientX, clientY) => {
+    const rect = joystickBase.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
+    const distance = Math.hypot(dx, dy);
+    const clampedDistance = Math.min(distance, radius);
+    const nx = distance > 0 ? dx / distance : 0;
+    const ny = distance > 0 ? dy / distance : 0;
+    const offsetX = nx * clampedDistance;
+    const offsetY = ny * clampedDistance;
+
+    joystickStick.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+    joystickInput.x = nx * (clampedDistance / radius);
+    joystickInput.y = -ny * (clampedDistance / radius);
+  };
+
+  joystickBase.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    activePointerId = event.pointerId;
+    joystickBase.setPointerCapture(event.pointerId);
+    updateJoystick(event.clientX, event.clientY);
+  });
+
+  joystickBase.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+    event.preventDefault();
+    updateJoystick(event.clientX, event.clientY);
+  });
+
+  const release = (event) => {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+    event.preventDefault();
+    activePointerId = null;
+    resetJoystick();
+  };
+
+  joystickBase.addEventListener("pointerup", release);
+  joystickBase.addEventListener("pointercancel", release);
+  joystickBase.addEventListener("lostpointercapture", release);
+}
+
+window.addEventListener("keydown", (event) => updateKeyState(event, true));
+window.addEventListener("keyup", (event) => updateKeyState(event, false));
+
+if (fullscreenToggleButton) {
+  fullscreenToggleButton.addEventListener("click", toggleFullScreen);
+  document.addEventListener("fullscreenchange", updateFullscreenButtonLabel);
+  updateFullscreenButtonLabel();
+}
+
+setupVirtualJoystick();
 
 renderer.domElement.addEventListener("pointerdown", (event) => {
   pointerDown = { x: event.clientX, y: event.clientY, time: performance.now() };
@@ -557,8 +941,11 @@ window.addEventListener("resize", () => {
 });
 
 function animate() {
+  const delta = Math.min(0.05, clock.getDelta());
+  updateCharacter(delta);
   sculpture.rotation.y += 0.004;
   controls.update();
+  constrainCameraInsideRoom();
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }

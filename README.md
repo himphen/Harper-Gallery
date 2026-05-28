@@ -16,6 +16,7 @@ gallery/
 ├── README.md
 ├── download-dummy-images.sh
 ├── index.html
+├── artworks.js
 ├── main.js
 ├── style.css
 └── artworks/
@@ -52,18 +53,25 @@ chmod +x download-dummy-images.sh
    http://localhost:8000
    ```
 
+3. Controls:
+   - Desktop: `WASD` or arrow keys to move, hold `Shift` to walk faster
+   - Desktop: drag mouse to look around
+   - Mobile/Tablet: drag to look around, pinch to zoom, use on-screen joystick to move
+   - Tap/click artwork to open detail panel
+   - Use top-right `Full Screen` button to enter or exit full screen mode
+
 ## Replace Dummy Images With Real Artwork
 
 Use either approach:
 
 1. Replace files in `artworks/` while keeping names `art1.jpg` to `art8.jpg`.
-2. Keep your filenames and update `file` paths in the `artworks` array in `main.js`.
+2. Keep your filenames and update `file` paths in the `artworks` array in `artworks.js`.
 
 All paths must stay relative (for example: `artworks/my-drawing-01.jpg`).
 
 ## Edit Artwork Titles and Descriptions
 
-In `main.js`, edit the `artworks` array:
+In `artworks.js`, edit the `artworks` array:
 
 ```js
 {
@@ -87,7 +95,7 @@ In `main.js`, edit the `artworks` array:
 
 ## Important Notes
 
-- GitHub Pages is static hosting, so artwork metadata is manually maintained in `main.js`.
+- GitHub Pages is static hosting, so artwork metadata is manually maintained in `artworks.js`.
 - Do not use absolute local file paths like `file:///Users/...`.
 - `context/` is excluded by `.gitignore`.
 - Agent instructions for Cursor or other AI coding assistants live in `AGENTS.md`.
