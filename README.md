@@ -14,6 +14,7 @@ gallery/
 ├── .gitignore
 ├── AGENTS.md
 ├── README.md
+├── favicon.svg
 ├── index.html
 ├── artworks.js
 ├── main.js
