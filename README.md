@@ -14,29 +14,14 @@ gallery/
 ├── .gitignore
 ├── AGENTS.md
 ├── README.md
-├── download-dummy-images.sh
 ├── index.html
 ├── artworks.js
 ├── main.js
 ├── style.css
 └── artworks/
-    ├── art1.jpg
-    ├── art2.jpg
-    ├── art3.jpg
-    ├── art4.jpg
-    ├── art5.jpg
-    ├── art6.jpg
-    ├── art7.jpg
-    └── art8.jpg
-```
-
-## Download Dummy Images
-
-The script downloads eight seeded placeholder JPG files into `artworks/`.
-
-```bash
-chmod +x download-dummy-images.sh
-./download-dummy-images.sh
+    ├── .gitkeep
+    └── raw/
+        └── .gitkeep
 ```
 
 ## Run Locally on macOS
@@ -60,7 +45,7 @@ chmod +x download-dummy-images.sh
    - Tap/click artwork to open detail panel
    - Use top-right `Full Screen` button to enter or exit full screen mode
 
-## Replace Dummy Images With Real Artwork
+## Update Artwork Images
 
 Use either approach:
 

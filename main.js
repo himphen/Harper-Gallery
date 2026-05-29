@@ -19,6 +19,8 @@ const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x141311);
 scene.fog = new THREE.Fog(0x141311, 16, 42);
+const overallExposure = 1.12;
+const spotlightIntensityBoost = 1.08;
 
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 2, 8.5);
@@ -28,7 +30,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = overallExposure;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 app.appendChild(renderer.domElement);
@@ -49,11 +51,11 @@ controls.maxDistance = 8.5;
 controls.maxPolarAngle = Math.PI / 2 - 0.05;
 controls.target.set(0, 1.6, 2.8);
 
-scene.add(new THREE.AmbientLight(0xfff2df, 0.42));
-scene.add(new THREE.HemisphereLight(0xfff7ea, 0x463831, 0.28));
+scene.add(new THREE.AmbientLight(0xfff2df, 0.5));
+scene.add(new THREE.HemisphereLight(0xfff7ea, 0x463831, 0.34));
 
-const roomWidth = 20;
-const roomDepth = 14;
+const roomWidth = 24;
+const roomDepth = 18;
 const roomHeight = 5.2;
 
 const room = new THREE.Group();
@@ -164,7 +166,14 @@ createBaseboard(frontSideWidth, 0.08, -(frontEntranceWidth / 2 + frontSideWidth 
 createBaseboard(frontSideWidth, 0.08, frontEntranceWidth / 2 + frontSideWidth / 2, 0.07, roomDepth / 2 - 0.03);
 
 function addSpotlight(position, targetPosition, intensity = 1.1) {
-  const light = new THREE.SpotLight(0xffefda, intensity, 16, Math.PI / 5.8, 0.35, 1.15);
+  const light = new THREE.SpotLight(
+    0xffefda,
+    intensity * spotlightIntensityBoost,
+    16,
+    Math.PI / 5.8,
+    0.35,
+    1.15
+  );
   light.position.copy(position);
   light.castShadow = true;
   light.shadow.mapSize.set(1024, 1024);
@@ -311,18 +320,51 @@ function createFrameBars(frameOuterWidth, frameOuterHeight, depth, material) {
   return bars;
 }
 
+const DEFAULT_ART_ASPECT = 1.36 / 0.86;
+const MIN_ART_ASPECT = 0.55;
+const MAX_ART_ASPECT = 1.9;
+const BASE_ART_AREA = 1.36 * 0.86;
+const MAT_PADDING_X = 0.18;
+const MAT_PADDING_Y = 0.15;
+const FRAME_PADDING_X = 0.07;
+const FRAME_PADDING_Y = 0.08;
+
+function getPanelDimensions(aspectRatio) {
+  const safeAspect = THREE.MathUtils.clamp(aspectRatio || DEFAULT_ART_ASPECT, MIN_ART_ASPECT, MAX_ART_ASPECT);
+  const artWidth = Math.sqrt(BASE_ART_AREA * safeAspect);
+  const artHeight = BASE_ART_AREA / artWidth;
+  const matWidth = artWidth + MAT_PADDING_X * 2;
+  const matHeight = artHeight + MAT_PADDING_Y * 2;
+
+  return {
+    artWidth,
+    artHeight,
+    matWidth,
+    matHeight,
+    frameOuterWidth: matWidth + FRAME_PADDING_X * 2,
+    frameOuterHeight: matHeight + FRAME_PADDING_Y * 2
+  };
+}
+
+function resizePlaneMesh(mesh, width, height) {
+  mesh.geometry.dispose();
+  mesh.geometry = new THREE.PlaneGeometry(width, height);
+}
+
+function disposeFrameBars(frameBars) {
+  frameBars.traverse((child) => {
+    if (!child.isMesh) {
+      return;
+    }
+    child.geometry.dispose();
+  });
+}
+
 function createArtworkPanel(artwork) {
   const group = new THREE.Group();
 
-  const frameOuterWidth = 1.86;
-  const frameOuterHeight = 1.32;
-  const matWidth = 1.72;
-  const matHeight = 1.16;
-  const artWidth = 1.36;
-  const artHeight = 0.86;
-
   const matBoard = new THREE.Mesh(
-    new THREE.PlaneGeometry(matWidth, matHeight),
+    new THREE.PlaneGeometry(1, 1),
     new THREE.MeshStandardMaterial({
       color: 0xf9f8f3,
       roughness: 0.95,
@@ -345,7 +387,7 @@ function createArtworkPanel(artwork) {
     polygonOffsetFactor: -1,
     polygonOffsetUnits: -1
   });
-  const painting = new THREE.Mesh(new THREE.PlaneGeometry(artWidth, artHeight), artMaterial);
+  const painting = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), artMaterial);
   painting.position.z = 0.03;
   painting.userData = { artwork };
   painting.castShadow = false;
@@ -355,9 +397,7 @@ function createArtworkPanel(artwork) {
   group.add(painting);
 
   const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.45, metalness: 0.2 });
-  const frameBars = createFrameBars(frameOuterWidth, frameOuterHeight, 0.08, frameMaterial);
-  frameBars.position.z = 0.035;
-  group.add(frameBars);
+  let frameBars = null;
 
   const label = new THREE.Mesh(
     new THREE.PlaneGeometry(0.78, 0.2),
@@ -371,15 +411,40 @@ function createArtworkPanel(artwork) {
       polygonOffsetUnits: -2
     })
   );
-  label.position.set(0.02, -frameOuterHeight / 2 - 0.22, 0.03);
+  label.position.set(0.02, -0.88, 0.03);
   label.castShadow = false;
   label.receiveShadow = false;
   label.renderOrder = 4;
   group.add(label);
 
+  function applyPanelDimensions(aspectRatio) {
+    const dimensions = getPanelDimensions(aspectRatio);
+
+    resizePlaneMesh(matBoard, dimensions.matWidth, dimensions.matHeight);
+    resizePlaneMesh(painting, dimensions.artWidth, dimensions.artHeight);
+
+    if (frameBars) {
+      group.remove(frameBars);
+      disposeFrameBars(frameBars);
+    }
+    frameBars = createFrameBars(dimensions.frameOuterWidth, dimensions.frameOuterHeight, 0.08, frameMaterial);
+    frameBars.position.z = 0.035;
+    group.add(frameBars);
+
+    label.position.set(0.02, -dimensions.frameOuterHeight / 2 - 0.22, 0.03);
+  }
+
+  applyPanelDimensions(DEFAULT_ART_ASPECT);
+
   textureLoader.load(
     artwork.file,
     (texture) => {
+      const image = texture.image;
+      const aspectRatio =
+        image && image.width > 0 && image.height > 0
+          ? image.width / image.height
+          : DEFAULT_ART_ASPECT;
+      applyPanelDimensions(aspectRatio);
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
       artMaterial.map = texture;
@@ -388,6 +453,7 @@ function createArtworkPanel(artwork) {
     },
     undefined,
     () => {
+      applyPanelDimensions(DEFAULT_ART_ASPECT);
       artMaterial.map = createFallbackTexture(artwork);
       artMaterial.color.setHex(0xffffff);
       artMaterial.needsUpdate = true;
@@ -506,11 +572,14 @@ function createGirlCharacter() {
     new THREE.SphereGeometry(0.206, 24, 20, 0, Math.PI * 2, 0, Math.PI * 0.68),
     hairMaterial
   );
+  hairCap.position.y = 0.012;
   headRig.add(hairCap);
 
-  const ponytail = new THREE.Mesh(new THREE.SphereGeometry(0.11, 18, 14), hairMaterial);
-  ponytail.position.set(0, -0.04, -0.19);
-  headRig.add(ponytail);
+  const shortBackHair = new THREE.Mesh(new THREE.CapsuleGeometry(0.1, 0.28, 6, 12), hairMaterial);
+  shortBackHair.position.set(0, -0.16, -0.16);
+  shortBackHair.rotation.x = Math.PI * 0.08;
+  shortBackHair.scale.set(1.06, 1.2, 0.9);
+  headRig.add(shortBackHair);
 
   const leftArmPivot = new THREE.Group();
   leftArmPivot.position.set(-0.245, 1.26, 0);
@@ -621,6 +690,8 @@ const desiredVelocity = new THREE.Vector3();
 const currentVelocity = new THREE.Vector3();
 const candidatePosition = new THREE.Vector3();
 const followTarget = new THREE.Vector3();
+const previousTarget = new THREE.Vector3();
+const targetShift = new THREE.Vector3();
 const clock = new THREE.Clock();
 let walkPhase = 0;
 
@@ -634,7 +705,7 @@ let pointerDown = { x: 0, y: 0, time: 0 };
 
 function openOverlay(artwork) {
   overlayTitle.textContent = artwork.title;
-  overlayYear.textContent = `Year: ${artwork.year}`;
+  overlayYear.textContent = artwork.year;
   overlayDescription.textContent = artwork.description;
   overlayImage.classList.remove("visible");
   overlayImage.alt = artwork.title;
@@ -755,8 +826,11 @@ function updateCharacter(delta) {
     updateWalkPose(0, blend);
   }
 
+  previousTarget.copy(controls.target);
   followTarget.set(girl.root.position.x, 1.25, girl.root.position.z);
   controls.target.lerp(followTarget, Math.min(1, delta * 8));
+  targetShift.copy(controls.target).sub(previousTarget);
+  camera.position.add(targetShift);
 }
 
 function constrainCameraInsideRoom() {
