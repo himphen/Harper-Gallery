@@ -22,9 +22,17 @@
   <body>
     <div id="app">
       <div id="hud">WASD or Arrow Keys: Move | Mouse Drag: Look Around | Click Artwork: Details</div>
-      <button id="fullscreen-toggle" type="button" aria-label="Toggle full screen">Full Screen</button>
+      <button id="fullscreen-toggle" type="button" aria-label="Enter full screen">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4" />
+        </svg>
+      </button>
       <div id="overlay" class="hidden" aria-live="polite" role="dialog" aria-label="Artwork details">
-        <button id="overlay-close" type="button" aria-label="Close artwork details">Close</button>
+        <button id="overlay-close" type="button" aria-label="Close artwork details">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6l-12 12" />
+          </svg>
+        </button>
         <img id="overlay-image" src="" alt="" />
         <h2 id="overlay-title">Artwork Title</h2>
         <p id="overlay-year">2026</p>

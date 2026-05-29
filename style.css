@@ -47,7 +47,7 @@ canvas {
 
 #hud {
   position: absolute;
-  left: 20px;
+  right: 20px;
   bottom: 20px;
   padding: 10px 13px;
   color: var(--muted);
@@ -62,13 +62,13 @@ canvas {
   position: absolute;
   top: 20px;
   left: 20px;
-  padding: 7px 13px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: var(--text);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  line-height: 1.2;
   cursor: pointer;
   transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
   z-index: 30;
@@ -127,15 +127,27 @@ canvas {
 #overlay-close {
   float: right;
   margin-left: 10px;
-  padding: 6px 12px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: #f7ecdb;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  line-height: 1.2;
   cursor: pointer;
   transition: background 120ms ease, transform 120ms ease, border-color 120ms ease;
+}
+
+#fullscreen-toggle svg,
+#overlay-close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 #overlay-image {
@@ -162,7 +174,7 @@ canvas {
 #joystick {
   display: none;
   position: absolute;
-  right: 18px;
+  left: 18px;
   bottom: 18px;
   width: 132px;
   height: 132px;

@@ -15,6 +15,10 @@ const joystick = document.getElementById("joystick");
 const joystickBase = document.getElementById("joystick-base");
 const joystickStick = document.getElementById("joystick-stick");
 const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+const FULLSCREEN_ENTER_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>';
+const FULLSCREEN_EXIT_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9H3V3M15 9h6V3M9 15H3v6M15 15h6v6"/></svg>';
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x141311);
@@ -898,7 +902,11 @@ function updateFullscreenButtonLabel() {
   if (!fullscreenToggleButton) {
     return;
   }
-  fullscreenToggleButton.textContent = document.fullscreenElement ? "Exit Full Screen" : "Full Screen";
+  const isFullscreen = Boolean(document.fullscreenElement);
+  const label = isFullscreen ? "Exit full screen" : "Enter full screen";
+  fullscreenToggleButton.innerHTML = isFullscreen ? FULLSCREEN_EXIT_ICON : FULLSCREEN_ENTER_ICON;
+  fullscreenToggleButton.setAttribute("aria-label", label);
+  fullscreenToggleButton.title = label;
 }
 
 async function toggleFullScreen() {
