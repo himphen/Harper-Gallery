@@ -48,16 +48,23 @@ gallery/
 
 ## Update Artwork Images
 
-Use either approach:
+`artworks.js` is the single source of truth for gallery content.
 
-1. Replace files in `artworks/` while keeping names `art1.jpg` to `art8.jpg`.
-2. Keep your filenames and update `file` paths in the `artworks` array in `artworks.js`.
+For each artwork entry:
 
-All paths must stay relative (for example: `artworks/my-drawing-01.jpg`).
+1. Put your image file in `artworks/` (for example: `artworks/my-drawing-01.jpg`).
+2. Set the `file` value in `artworks.js` to that relative path.
+
+Notes:
+
+- You can use any number of artworks (not fixed to 8).
+- The room has 8 wall slots; if you add more than 8 artworks, slots are reused.
+- If an image file is missing, the frame shows a graceful placeholder texture instead of breaking.
+- Keep paths relative for GitHub Pages compatibility (do not use absolute local paths).
 
 ## Edit Artwork Titles and Descriptions
 
-In `artworks.js`, edit the `artworks` array:
+In `artworks.js`, edit each item in the `artworks` array:
 
 ```js
 {
