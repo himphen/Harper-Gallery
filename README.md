@@ -52,13 +52,11 @@ gallery/
 
 For each artwork entry:
 
-1. Put your image file in `artworks/` (for example: `artworks/my-drawing-01.jpg`).
+1. Put your image file in `artworks/` (for example: `artworks/art1.jpg`).
 2. Set the `file` value in `artworks.js` to that relative path.
 
 Notes:
 
-- You can use any number of artworks (not fixed to 8).
-- The room has 8 wall slots; if you add more than 8 artworks, slots are reused.
 - If an image file is missing, the frame shows a graceful placeholder texture instead of breaking.
 - Keep paths relative for GitHub Pages compatibility (do not use absolute local paths).
 

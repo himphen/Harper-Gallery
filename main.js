@@ -3,7 +3,6 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { artworks } from "./artworks.js";
 
 const app = document.getElementById("app");
-const hud = document.getElementById("hud");
 const overlay = document.getElementById("overlay");
 const overlayImage = document.getElementById("overlay-image");
 const overlayTitle = document.getElementById("overlay-title");
@@ -11,6 +10,13 @@ const overlayYear = document.getElementById("overlay-year");
 const overlayDescription = document.getElementById("overlay-description");
 const overlayCloseButton = document.getElementById("overlay-close");
 const fullscreenToggleButton = document.getElementById("fullscreen-toggle");
+const helpToggleButton = document.getElementById("help-toggle");
+const helpOverlay = document.getElementById("help-overlay");
+const helpCloseButton = document.getElementById("help-close");
+const helpStartButton = document.getElementById("help-start");
+const helpMoveDetail = document.getElementById("help-move-detail");
+const helpLookDetail = document.getElementById("help-look-detail");
+const helpClickDetail = document.getElementById("help-click-detail");
 const joystick = document.getElementById("joystick");
 const joystickBase = document.getElementById("joystick-base");
 const joystickStick = document.getElementById("joystick-stick");
@@ -39,12 +45,6 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 app.appendChild(renderer.domElement);
 renderer.domElement.style.touchAction = "none";
-
-if (hud) {
-  hud.textContent = isCoarsePointer
-    ? "Touch Drag: Look Around | Pinch: Zoom | Joystick: Move | Tap Artwork: Details"
-    : "WASD or Arrow Keys: Move | Mouse Drag: Look Around | Click Artwork: Details";
-}
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -706,6 +706,8 @@ controls.update();
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 let pointerDown = { x: 0, y: 0, time: 0 };
+let isHelpOpen = false;
+let helpHideTimer = null;
 
 function openOverlay(artwork) {
   overlayTitle.textContent = artwork.title;
@@ -725,6 +727,86 @@ function openOverlay(artwork) {
 
 function closeOverlay() {
   overlay.classList.add("hidden");
+}
+
+function resetMovementInputs() {
+  moveState.forward = false;
+  moveState.backward = false;
+  moveState.left = false;
+  moveState.right = false;
+  moveState.sprint = false;
+  joystickInput.x = 0;
+  joystickInput.y = 0;
+
+  if (joystickStick) {
+    joystickStick.style.transform = "translate(-50%, -50%)";
+  }
+}
+
+function updateHelpCopy() {
+  if (!helpMoveDetail || !helpLookDetail || !helpClickDetail) {
+    return;
+  }
+
+  if (isCoarsePointer) {
+    helpMoveDetail.textContent = "Joystick 虛擬搖桿";
+    helpLookDetail.textContent = "按住滑鼠拖動 Mouse Drag";
+    helpClickDetail.textContent = "點擊查看作品 Click Artwork";
+  } else {
+    helpMoveDetail.textContent = "方向鍵 Arrow Keys / WASD";
+    helpLookDetail.textContent = "按住滑鼠拖動 Mouse Drag";
+    helpClickDetail.textContent = "點擊查看作品 Click Artwork";
+  }
+}
+
+function openHelpOverlay({ focusStartButton = true } = {}) {
+  if (!helpOverlay) {
+    return;
+  }
+
+  closeOverlay();
+
+  if (helpHideTimer) {
+    window.clearTimeout(helpHideTimer);
+    helpHideTimer = null;
+  }
+
+  helpOverlay.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    helpOverlay.classList.add("is-open");
+  });
+
+  isHelpOpen = true;
+  controls.enabled = false;
+  resetMovementInputs();
+
+  if (focusStartButton && helpStartButton) {
+    helpStartButton.focus();
+  }
+}
+
+function closeHelpOverlay({ focusHelpButton = true } = {}) {
+  if (!helpOverlay || helpOverlay.classList.contains("hidden")) {
+    return;
+  }
+
+  helpOverlay.classList.remove("is-open");
+  isHelpOpen = false;
+  controls.enabled = true;
+  resetMovementInputs();
+
+  if (helpHideTimer) {
+    window.clearTimeout(helpHideTimer);
+  }
+
+  helpHideTimer = window.setTimeout(() => {
+    helpOverlay.classList.add("hidden");
+    helpHideTimer = null;
+  }, 280);
+
+  if (focusHelpButton && helpToggleButton) {
+    helpToggleButton.focus();
+  }
 }
 
 function applyMovementBounds(position) {
@@ -858,6 +940,30 @@ function setMoveAction(action, pressed) {
 }
 
 function updateKeyState(event, pressed) {
+  if (isHelpOpen) {
+    if (event.code === "Escape" && pressed) {
+      closeHelpOverlay();
+      event.preventDefault();
+      return;
+    }
+
+    if (
+      event.code === "KeyW" ||
+      event.code === "KeyA" ||
+      event.code === "KeyS" ||
+      event.code === "KeyD" ||
+      event.code === "ArrowUp" ||
+      event.code === "ArrowDown" ||
+      event.code === "ArrowLeft" ||
+      event.code === "ArrowRight" ||
+      event.code === "ShiftLeft" ||
+      event.code === "ShiftRight"
+    ) {
+      event.preventDefault();
+    }
+    return;
+  }
+
   let handled = true;
 
   switch (event.code) {
@@ -897,6 +1003,33 @@ function updateKeyState(event, pressed) {
 }
 
 overlayCloseButton.addEventListener("click", closeOverlay);
+
+if (helpToggleButton) {
+  helpToggleButton.title = "幫助 Help";
+  helpToggleButton.addEventListener("click", () => {
+    if (isHelpOpen) {
+      closeHelpOverlay();
+      return;
+    }
+    openHelpOverlay();
+  });
+}
+
+if (helpCloseButton) {
+  helpCloseButton.addEventListener("click", closeHelpOverlay);
+}
+
+if (helpStartButton) {
+  helpStartButton.addEventListener("click", () => closeHelpOverlay({ focusHelpButton: false }));
+}
+
+if (helpOverlay) {
+  helpOverlay.addEventListener("click", (event) => {
+    if (event.target === helpOverlay) {
+      closeHelpOverlay({ focusHelpButton: false });
+    }
+  });
+}
 
 function updateFullscreenButtonLabel() {
   if (!fullscreenToggleButton) {
@@ -956,6 +1089,9 @@ function setupVirtualJoystick() {
   };
 
   joystickBase.addEventListener("pointerdown", (event) => {
+    if (isHelpOpen) {
+      return;
+    }
     event.preventDefault();
     activePointerId = event.pointerId;
     joystickBase.setPointerCapture(event.pointerId);
@@ -963,6 +1099,9 @@ function setupVirtualJoystick() {
   });
 
   joystickBase.addEventListener("pointermove", (event) => {
+    if (isHelpOpen) {
+      return;
+    }
     if (event.pointerId !== activePointerId) {
       return;
     }
@@ -994,12 +1133,25 @@ if (fullscreenToggleButton) {
 }
 
 setupVirtualJoystick();
+updateHelpCopy();
+
+if (helpOverlay) {
+  window.setTimeout(() => {
+    openHelpOverlay();
+  }, 240);
+}
 
 renderer.domElement.addEventListener("pointerdown", (event) => {
+  if (isHelpOpen) {
+    return;
+  }
   pointerDown = { x: event.clientX, y: event.clientY, time: performance.now() };
 });
 
 renderer.domElement.addEventListener("pointerup", (event) => {
+  if (isHelpOpen) {
+    return;
+  }
   const distance = Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y);
   const duration = performance.now() - pointerDown.time;
   if (distance > 6 || duration > 450) {
