@@ -28,5 +28,11 @@ export const artworks = [
     title: "Teapot",
     year: "April 2026",
     description: "我是隻茶壺肥又矮，我是隻茶壺肥又矮，我是隻茶壺肥又矮⋯⋯"
+  },
+  {
+    file: "artworks/art6.png",
+    title: "Papa",
+    year: "May 2026",
+    description: "呢個係我個爸爸，佢有眼有鼻有口有耳仔，食緊士多啤梨。"
   }
 ];
